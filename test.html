@@ -1,0 +1,63 @@
+<head>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<div>在线列表：</div>
+<ul id="line">
+</ul>
+<input id="name"/>
+<input type="password" id="pwd"/>
+<button onclick="go()">submit</button>
+<div>用户信息：<span id="userName"></span></div>
+<div>聊天对象：<span id="ruName"></span></div>
+<input id="message"/>
+<button onclick="sendMessage()">send</button>
+<script>
+    let outws = '';
+    let uid = 0;
+
+    function go() {
+        var acc = document.getElementById('name').value;
+        var pwd = document.getElementById('pwd').value;
+
+        $.ajax({
+            type: "POST",
+            url: "http://localhost:3000/users/login",
+            data: {acc:acc, pwd:pwd},
+            dataType: "json",
+            success: function(data){
+                data.online.map(function(u) {
+                    $('<li>'+u.name+'<button onclick="makeSend('+u.id+')">发送消息</button></li>').appendTo($('#line'));
+                })
+                $('#userName').text(data.name);
+                createSocket(data);
+                uid = data.id;
+            }
+        })
+    }
+
+    function createSocket(userData) {
+        var ws = new WebSocket("ws://localhost:8181");
+        ws.onopen = function (e) {
+            alert('联系通道已建立');
+            ws.send(JSON.stringify({userID:userData.id, type: 'init'}));
+            outws = ws;
+        }
+
+        ws.onmessage = function(e){
+            console.log(JSON.parse(e.data).msg);
+        }
+    }
+    function sendMessage() {
+        const message = {
+            Mid: uid,
+            Tid: 2,
+            msg: $('#message').val(),
+            type: 'chat',
+        }
+        outws.send(JSON.stringify(message));
+    }
+
+    function makeSend(RUID) {
+
+    }
+</script>
