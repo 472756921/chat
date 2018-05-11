@@ -2,6 +2,7 @@ let client = [];
 function CS() {
     var WebSocketServer = require('ws').Server, wss = new WebSocketServer({ port: 8181 });
     wss.on('connection', function (ws) {
+        console.log(ws);
         ws.on('message', function (message) {
             message = JSON.parse(message);
             if(message.type === 'init'){
@@ -12,15 +13,15 @@ function CS() {
                 ws.send(JSON.stringify({msg:'建立会话完成'}));
             } else {
                 const nw = checkWS(message.Tid)
-                nw[0].ws.send(JSON.stringify({msg:message.msg}));
+                nw[0].ws.send(JSON.stringify({msg:message.msg, type:'chat'}));
             }
         });
     });
 }
 
-function checkWS(id) {
+function checkWS(userID) {
     return client.filter((um) => {
-        if(um.userID === id){
+        if(um.userID === userID){
             return um;
         }
     })

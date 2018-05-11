@@ -1,38 +1,59 @@
 var express = require('express');
 var router = express.Router();
 var userData = require('../userData.js');
+const qs = require('qs');
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.get('/getUser', function(req, res, next) {
+    const cookie = req.headers.cookie || '';
+    const cookies = qs.parse(cookie.replace(/\s/g, ''), { delimiter: ';' });
+    const response = {};
+    const user = {};
+    if (!cookies.token) {
+        res.status(200).send({ message: 'Not Login' })
+        return
+    }
+    const token = JSON.parse(cookies.token)
+    if (token) {
+        response.success = token.deadline > new Date().getTime()
+    }
+    if (response.success) {
+        const userItem = userData.filter(_ => _.userID === token.userID)
+        if (userItem.length > 0) {
+            user.username = userItem[0].userName
+            user.userID = userItem[0].userID
+        }
+    }
+    response.user = user
+    res.json(response)
 });
 
 router.post('/login', function(req, res, next) {
     const user = login(req.body);
     if(user.length != 0) {
-        let online = userData.filter(u => {
-            if(u.type === 'line' && u.acc !== user[0].acc){
-                return {acc: u.acc, name: u.name, userID: u.id};
-            }
+        const now = new Date()
+        now.setDate(now.getDate() + 1)
+        res.cookie('token', JSON.stringify({ userID: user[0].userID, deadline: now.getTime() }), {
+            maxAge: 1000 * 60 * 30,
+            httpOnly: true,
         })
         res.json({
-            acc: user[0].acc,
-            id: user[0].id,
+            userName: user[0].userName,
+            userID: user[0].userID,
             name: user[0].name,
-            online: online,
         })
         userData[userData.indexOf(user[0])].type = 'line';
     } else {
         res.status(403);
-        res.json({errMsg: 'acc or pwd is error!'});
+        res.json({errMsg: 'userName or password is error!'});
     }
 });
 
 
 function login(user) {
     return userData.filter( function (U) {
-        if(U.acc === user.acc && U.pwd === user.pwd){
-        return true;
+        if(U.userName === user.userName && U.password === user.password){
+        return U;
       }
     })
 }
