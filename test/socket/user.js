@@ -1,28 +1,50 @@
 let client = [];
+var userData = require('../userData.js');
+
 function CS() {
     var WebSocketServer = require('ws').Server, wss = new WebSocketServer({ port: 8181 });
     wss.on('connection', function (ws) {
-        console.log(ws);
         ws.on('message', function (message) {
             message = JSON.parse(message);
             if(message.type === 'init'){
-                const nw = checkWS(message.userID)
-                if(nw.length === 0) {
-                    client.push({userID:message.userID, ws: ws})
-                }
-                ws.send(JSON.stringify({msg:'建立会话完成'}));
+                const nw = checkWS(ws, message.userID);
+                sendUpLine(message.userID);
             } else {
                 const nw = checkWS(message.Tid)
                 nw[0].ws.send(JSON.stringify({msg:message.msg, type:'chat'}));
             }
         });
+        ws.on('close', function(ws) {
+            try{
+                const nw = checkWS(ws);
+                client.slice(client.indexOf(nw[0]), 1);
+            }catch(e){
+                console.log('刷新页面了');
+            }
+        });
     });
 }
 
-function checkWS(userID) {
-    return client.filter((um) => {
-        if(um.userID === userID){
-            return um;
+function checkWS(des, userID) {
+    if(typeof des === Number){
+        return client.filter((um) => um.userID === des )
+    } else {
+        let wss = client.filter((um) => um.ws === des )
+        if(wss.length === 0) {
+            client.push({userID: userID, ws: des})
+        }
+    }
+}
+
+function sendUpLine(userID) {
+    const user = userData.filter(_ => _.userID === userID);
+    client.map((um) => {
+        if(um.userID !== userID){
+            try{
+                um.ws.send(JSON.stringify({msg:{userName:user.userName, name: user.name, userID: user.userID}, type:'userUpLine'}));
+            }catch(e){
+                console.log(userID+'已经断开连接');
+            }
         }
     })
 }

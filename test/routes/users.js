@@ -7,8 +7,8 @@ const qs = require('qs');
 router.get('/getUser', function(req, res, next) {
     const cookie = req.headers.cookie || '';
     const cookies = qs.parse(cookie.replace(/\s/g, ''), { delimiter: ';' });
-    const response = {};
-    const user = {};
+    let response = {};
+    let user = {};
     if (!cookies.token) {
         res.status(200).send({ message: 'Not Login' })
         return
@@ -22,6 +22,7 @@ router.get('/getUser', function(req, res, next) {
         if (userItem.length > 0) {
             user.username = userItem[0].userName
             user.userID = userItem[0].userID
+            userItem[0].type = 'online'
         }
     }
     response.user = user
@@ -57,5 +58,11 @@ function login(user) {
       }
     })
 }
+
+
+router.get('/getonLineUser', function(req, res, next) {
+    const online = userData.filter(_ => _.type === 'online');
+    res.json(online)
+});
 
 module.exports = router;
