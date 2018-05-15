@@ -10,16 +10,16 @@ function CS() {
                 const nw = checkWS(ws, message.userID);
                 sendUpLine(message.userID);
             } else {
-                const nw = checkWS(message.Tid)
+                const nw = checkWS(message.Tid);
                 nw[0].ws.send(JSON.stringify({msg:message.msg, type:'chat'}));
             }
         });
-        ws.on('close', function(ws) {
+        ws.on('close', function(wst) {
             try{
                 const nw = checkWS(ws);
-                client.slice(client.indexOf(nw[0]), 1);
+                client.splice(client.indexOf(nw[0]), 1);
             }catch(e){
-                console.log('刷新页面了');
+                console.log(e);
             }
         });
     });
@@ -27,17 +27,21 @@ function CS() {
 
 function checkWS(des, userID) {
     if(typeof des === Number){
-        return client.filter((um) => um.userID === des )
+        return client.filter((um) => um.userID === des );
     } else {
-        let wss = client.filter((um) => um.ws === des )
-        if(wss.length === 0) {
-            client.push({userID: userID, ws: des})
+        if(userID === undefined) {
+            return client.filter((um) => um.ws === des );
+        } else {
+            let wss = client.filter((um) => um.ws === des );
+            if(wss.length === 0) {
+                client.push({userID: userID, ws: des});
+            }
         }
     }
 }
 
 function sendUpLine(userID) {
-    const user = userData.filter(_ => _.userID === userID);
+    const user = userData.filter(_ => _.userID === userID)[0];
     client.map((um) => {
         if(um.userID !== userID){
             try{
