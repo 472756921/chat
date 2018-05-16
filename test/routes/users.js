@@ -35,7 +35,7 @@ router.post('/login', function(req, res, next) {
         const now = new Date()
         now.setDate(now.getDate() + 1)
         res.cookie('token', JSON.stringify({ userID: user[0].userID, deadline: now.getTime() }), {
-            maxAge: 1000 * 60 * 30,
+            maxAge: 1000 * 60 * 5,
             httpOnly: true,
         })
         res.json({
