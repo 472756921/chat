@@ -11,7 +11,7 @@ function CS() {
                 sendUpLine(message.userID);
             } else {
                 const nw = checkWS(message.Tid);
-                nw[0].ws.send(JSON.stringify({msg:message.msg, type:'chat'}));
+                nw[0].ws.send(JSON.stringify({msg:message.msg, type:'chat', Tid: message.userID, userID: message.Tid}));
             }
         });
         ws.on('close', function(wst) {
@@ -26,7 +26,7 @@ function CS() {
 }
 
 function checkWS(des, userID) {
-    if(typeof des === Number){
+    if(typeof des == 'number'){
         return client.filter((um) => um.userID === des );
     } else {
         if(userID === undefined) {

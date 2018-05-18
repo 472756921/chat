@@ -10,32 +10,32 @@ router.get('/getUser', function(req, res, next) {
     let response = {};
     let user = {};
     if (!cookies.token) {
-        res.status(200).send({ message: 'Not Login' })
+        res.status(200).send({ message: 'Not Login' });
         return
     }
-    const token = JSON.parse(cookies.token)
+    const token = JSON.parse(cookies.token);
     if (token) {
-        response.success = token.deadline > new Date().getTime()
+        response.success = token.deadline > new Date().getTime();
     }
     if (response.success) {
-        const userItem = userData.filter(_ => _.userID === token.userID)
+        const userItem = userData.filter(_ => _.userID === token.userID);
         if (userItem.length > 0) {
-            user.username = userItem[0].userName
-            user.userID = userItem[0].userID
-            userItem[0].type = 'online'
+            user.username = userItem[0].userName;
+            user.userID = userItem[0].userID;
+            userItem[0].type = 'online';
         }
     }
-    response.user = user
-    res.json(response)
+    response.user = user;
+    res.json(response);
 });
 
 router.post('/login', function(req, res, next) {
     const user = login(req.body);
     if(user.length != 0) {
-        const now = new Date()
-        now.setDate(now.getDate() + 1)
+        const now = new Date();
+        now.setDate(now.getDate() + 1);
         res.cookie('token', JSON.stringify({ userID: user[0].userID, deadline: now.getTime() }), {
-            maxAge: 1000 * 60 * 5,
+            maxAge: 1000 * 60 * 20,
             httpOnly: true,
         })
         res.json({
@@ -62,7 +62,14 @@ function login(user) {
 
 router.get('/getonLineUser', function(req, res, next) {
     const online = userData.filter(_ => _.type === 'online');
-    res.json(online)
+    res.json(online);
+});
+
+router.get('/getUserByID', function(req, res, next) {
+    let {query} = req;
+    const {userID} = query;
+    const u = userData.filter(U => U.userID == userID)[0];
+    res.json(u);
 });
 
 module.exports = router;
